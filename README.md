@@ -17,6 +17,8 @@ Node.jsで動かすためのJavascriptプログラムです。
 - delete.rb : SensortagのシリアルID（externalID）をキーとしてデバイス、デバイスユーザの両方を削除します。
 - config-sample.rb : delete.rbを実行するために必要な設定情報を記載するファイルです。実際に使用する際にはconfig.rbにリネームした上で設定値を記載して使ってください。
 
+Raspberry PI 2 Model Bの環境設定についてはWikiを参照してください。
+
 # Release Note
 
 - 2016.11.18: バッテリ残量の読み取りができるようにしました。 ```~/node_modules/sensortag/lib/cc2650.js``` の変更が必要になりますので Other Configuration を確認してください。
