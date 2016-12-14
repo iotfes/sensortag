@@ -27,7 +27,6 @@ Raspberry PI 2 Model Bの環境設定についてはWikiを参照してくださ
 
 ## tisample.js / multi-ti.js
 
- `# node tisample.js`  
  `# node multi-ti.js`
 
 ## delete.rb
