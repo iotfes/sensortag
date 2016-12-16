@@ -15,6 +15,7 @@ var config = require('./config.js');
 
 var userID = config.id;
 var userPW = config.password;
+var devicePW = config.devicepassword;
 var tenant = config.tenant;
 var group = config.group;
 var deleteFlg = config.delete;
@@ -119,7 +120,7 @@ var onDiscover = function(sensorTag) {
         }); // sensorTag.readDeviceName
       }, // async.waterfall.1
       function(deviceName, callback) {
-        // 2. システムID取得
+        // 2. システムID（externalID）取得
         systemID = null;
 
         console.log('readSystemId');
@@ -151,7 +152,7 @@ var onDiscover = function(sensorTag) {
             console.info("[INFO] Device is already registered.");
             deviceID = body.managedObject.id;
             console.info("[INFO] Device ID: " + deviceID);
-            callback(null, deviceName, deviceID);
+            callback(null, deviceName, systemID, deviceID);
 
           } else if (!error && response.statusCode == 404){ // request.get後のstatus code判定部
           // 3-2. デバイス初期登録フロー開始
@@ -164,7 +165,7 @@ var onDiscover = function(sensorTag) {
           // センサのシリアルIDをExternal IDとしてBulk方式で登録する
             var csvData = new String();
             csvData += 'ID;CREDENTIALS;TYPE;NAME;ICCID;IDTYPE;PATH;SHELL'+EOL;
-            csvData += systemID + ';abcd1234;' + deviceName + ';' + deviceName + '/' + systemID + ';;;' + group + ';0'
+            csvData += systemID + ';' + devicePW + ';' + deviceName + ';' + deviceName + '/' + systemID + ';;;' + group + ';0'
 
             var formData = {
               file: {
@@ -196,7 +197,7 @@ var onDiscover = function(sensorTag) {
                 var options = {
                   uri: baseURI + getExtIDURITemplate.replace(/<ID>/g, systemID),
                   headers: {
-                    'Authorization': 'Basic ' + Base64.encode(userID + ":" + userPW)
+                    'Authorization': 'Basic ' + Base64.encode(deviceUserFixedStr + systemID + ":" + devicePW)
                   },
                   json: true
                 };
@@ -207,14 +208,14 @@ var onDiscover = function(sensorTag) {
                 request.get(options, function(error, response, body){
 
                   if (!error && response.statusCode == 200) {
-                    // 3-2-1. デバイス登録が正常に完了した場合
+                    // 3-2-1. globalIDが正常に取得した場合
                     console.log(body);
                     deviceID = body.managedObject.id;
                     console.info('[INFO] Device "' + systemID + '" has registered successfully.');
                     console.info('[INFO] Device ID is : ' + deviceID);
-                    callback(null, deviceName, deviceID);
+                    callback(null, deviceName, systemID, deviceID);
                   } else {
-                    // 3-2-2. デバイス登録が失敗した場合
+                    // 3-2-2. globalID取得が失敗した場合
                     console.error('[ERR] HTTP ResponseCode: '+ response.statusCode);
                     console.error('[ERR] Exit.');
                     process.exit();                             
@@ -241,8 +242,9 @@ var onDiscover = function(sensorTag) {
         }); // request.get (for 3)
 
       } // async.waterfall.3
-      ],function(err, deviceName, deviceID) {
+      ],function(err, deviceName, systemID, deviceID) {
         // deviceName: デバイス（センサ）の名前(SensorTag 2.0)
+        // systemID: external IDのこと。
         // deviceID: global IDのこと。
 
         device_timers[sensorTag.id] = setInterval(function() {
@@ -428,7 +430,7 @@ var onDiscover = function(sensorTag) {
               var options = {
                 uri: baseURI + measurementURI,
                 headers: {
-                  'Authorization': 'Basic ' + Base64.encode(userID + ":" + userPW),
+                  'Authorization': 'Basic ' + Base64.encode(deviceUserFixedStr + systemID + ":" + devicePW),
                   'Accept': 'application/vnd.com.nsn.cumulocity.measurement+json'
                 },
                 json: true,

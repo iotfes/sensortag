@@ -25,7 +25,7 @@ Raspberry PI 2 Model Bの環境設定についてはWikiを参照してくださ
 
 # Usage
 
-## tisample.js / multi-ti.js
+## multi-ti.js
 
  `# node multi-ti.js`
 

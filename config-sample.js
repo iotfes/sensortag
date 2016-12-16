@@ -1,5 +1,6 @@
 exports.id = '<Your Cumulocity ID>';
 exports.password = '<Your Cumulocity Password>';
+exports.devicepassword = '<Your Device Password (Any)>';
 exports.tenant = '<Your Cumulocity Tenant Name>';
 exports.group = '<Your Group Name>';
 // delete = true : デバイス切断時にCumulocity上でのデバイス登録を削除する
