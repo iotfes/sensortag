@@ -124,9 +124,9 @@ var onDiscover = function(sensorTag) {
 
         console.log('readSystemId');
         systemID = addFigure(sensorTag.id);
-        console.log('system id = ' + systemId);
+        console.log('system id = ' + systemID);
 
-        callback(null, deviceName, systemId);
+        callback(null, deviceName, systemID);
 
       }, // async.waterfall.2
       function(deviceName, systemID, callback) {
