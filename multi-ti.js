@@ -20,7 +20,7 @@ var tenant = config.tenant;
 var group = config.group;
 var deleteFlg = config.delete;
 
-var pollingInterval = 10000; //ms | NOTE: Interval for polling in periodic
+var pollingInterval = config.pollingInterval || 10000; //ms | NOTE: Interval for polling in periodic
 
 var baseURI = 'http://'+tenant+'.cumulocity.com';
 var inventoryURI = '/inventory/managedObjects';
@@ -70,7 +70,6 @@ function makeBody(results, deviceName, deviceID){
 function addFigure(str) {
     var prestr = new String(str).replace(/:/g, "");
     var num = prestr.substr(0, 6) + '0000' + prestr.substr(6)
-    while(num != (num = num.replace(/^(-?\w+)(\w{2})/, "$1:$2")));
     return num;
 }
 
@@ -124,10 +123,11 @@ var onDiscover = function(sensorTag) {
         systemID = null;
 
         console.log('readSystemId');
-        sensorTag.readSystemId(function(error, systemId) {
-          console.log('system id = ' + systemId);
-          callback(null, deviceName, systemId);
-        });  // sensorTag.readSystemId
+        systemID = addFigure(sensorTag.id);
+        console.log('system id = ' + systemId);
+
+        callback(null, deviceName, systemId);
+
       }, // async.waterfall.2
       function(deviceName, systemID, callback) {
         // 3. デバイス初期登録確認
