@@ -274,10 +274,10 @@ var onDiscover = function(sensorTag) {
                 var objTemp = Object();
                 var ambTemp = Object();
 
-                objTemp['value'] = objectTemperature.toFixed(1);
+                objTemp['value'] = objectTemperature;
                 objTemp['unit'] = "°C"; 
 
-                ambTemp['value'] = ambientTemperature.toFixed(1);
+                ambTemp['value'] = ambientTemperature;
                 ambTemp['unit'] = "°C"; 
 
                 obj['objectTemperature'] = objTemp; 
@@ -322,9 +322,9 @@ var onDiscover = function(sensorTag) {
                 var objTemp = Object();
                 var objHumid = Object();
 
-                objTemp['value'] = temperature.toFixed(1);
+                objTemp['value'] = temperature;
                 objTemp['unit'] = "°C";
-                objHumid['value'] = humidity.toFixed(1);
+                objHumid['value'] = humidity;
                 objHumid['unit'] = "%";
 
                 obj['temperature'] = objTemp;
@@ -367,7 +367,7 @@ var onDiscover = function(sensorTag) {
                 var obj = Object();
                 var objPress = Object();
 
-                objPress['value'] = pressure.toFixed(1);
+                objPress['value'] = pressure;
                 objPress['unit'] = "mBar";
 
                 obj['pressure'] = objPress;
@@ -409,7 +409,7 @@ var onDiscover = function(sensorTag) {
                 var obj = Object();
                 var objLux = Object();
 
-                objLux['value'] = lux.toFixed(1);
+                objLux['value'] = lux;
                 objLux['unit'] = "lx";
 
                 obj['Luxometer'] = objLux;
@@ -425,7 +425,7 @@ var onDiscover = function(sensorTag) {
                 var obj = Object();
                 var objBattery = Object();
 
-                objBattery['value'] = battery.toFixed(1);
+                objBattery['value'] = battery;
                 objBattery['unit'] = "%";
 
                 obj['Battery'] = objBattery;
