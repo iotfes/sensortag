@@ -21,6 +21,7 @@ Raspberry PI 2 Model Bの環境設定についてはWikiを参照してくださ
 
 # Release Note
 
+- 2017.1.16: SensorTagのデータを複数個まとめてPOSTできるように変更しました。 ```config-sample.js``` に設定パラメータを追加していますのでご確認ください。  
 - 2016.11.18: バッテリ残量の読み取りができるようにしました。 ```~/node_modules/sensortag/lib/cc2650.js``` の変更が必要になりますので Other Configuration を確認してください。
 
 # Usage
@@ -34,6 +35,10 @@ Raspberry PI 2 Model Bの環境設定についてはWikiを参照してくださ
  `$ ruby delete.rb <externalID>`
 
 ## Other Configuration
+
+### SensorTagのデータを複数個まとめてPOSTのしくみ
+
+![measurement](https://raw.github.com/wiki/iotfes/sensortag/img/measurement.jpg "measurement")
 
 ### Raspberry PIのIP設定を変更  
 
