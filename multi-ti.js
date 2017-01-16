@@ -1,7 +1,7 @@
 /*
 * multi-ti.js 
 * Author: a-yoshino
-* Last Update: 2016/12/14
+* Last Update: 2017/1/16
 * Usage: node multi-ti.js
 */
 var async = require('async');
@@ -20,7 +20,8 @@ var tenant = config.tenant;
 var group = config.group;
 var deleteFlg = config.delete;
 
-var pollingInterval = config.pollingInterval || 10000; //ms | NOTE: Interval for polling in periodic
+var pollingInterval = config.pollingInterval || 10000; // ms | Interval for polling in periodic
+var repetationNumber = config.repetationNumber || 1; // a number for deciding how many measurement data to be sent together
 
 var baseURI = 'http://'+tenant+'.cumulocity.com';
 var inventoryURI = '/inventory/managedObjects';
@@ -30,6 +31,9 @@ var deviceCredentialsURI = '/devicecontrol/bulkNewDeviceRequests ';
 var deleteUserURI = '/user/'+tenant+'/users/<ID>';
 
 var deviceUserFixedStr = 'device_'
+
+var SINGLEHEADER = 'application/vnd.com.nsn.cumulocity.measurement+json';
+var MULTIPLEHEADER = 'application/vnd.com.nsn.cumulocity.measurementCollection+json';
 
 var Base64 = {
   encode: function(str) {
@@ -73,12 +77,14 @@ function addFigure(str) {
     return num;
 }
 
-var device_timers = {}; // NOTE: Storage for setinterval objects
+var deviceTimers = {}; // Storage for setinterval objects
+var measurementTimes = {}; // Storage for repetation numbers 
+var measurementArrays = {}; // Storage for measurement data
 
 var onDiscover = function(sensorTag) {
   sensorTag.once('disconnect', function() {
-    clearInterval(device_timers[sensorTag.id]);
-    delete(device_timers[sensorTag.id]);
+    clearTimeout(deviceTimers[sensorTag.id]);
+    delete(deviceTimers[sensorTag.id]);
     console.info(sensorTag.id, 'disconnected');
   });
 
@@ -247,7 +253,14 @@ var onDiscover = function(sensorTag) {
         // systemID: external IDのこと。
         // deviceID: global IDのこと。
 
-        device_timers[sensorTag.id] = setInterval(function() {
+        // データPOSTのためのカウンタ
+        measurementTimes[sensorTag.id] = 0;
+        // measurementの格納変数
+        measurementArrays[sensorTag.id] = [];
+
+        function dataCollectLoop() {
+
+          console.log("dataCollectionLoop: measurementTimes=" + measurementTimes[sensorTag.id]);
 
           async.series([
 
@@ -421,37 +434,93 @@ var onDiscover = function(sensorTag) {
               });
             }
             ],
-            function(err, results) {
-              console.log('results');
+            function results(err, results) {
+              console.log('results: measurementTimes=' + measurementTimes[sensorTag.id]);
 
-              body = makeBody(results, deviceName, deviceID);
+              var measurement = makeBody(results, deviceName, deviceID);
 
-              // API送信用データ
-              var options = {
-                uri: baseURI + measurementURI,
-                headers: {
-                  'Authorization': 'Basic ' + Base64.encode(deviceUserFixedStr + systemID + ":" + devicePW),
-                  'Accept': 'application/vnd.com.nsn.cumulocity.measurement+json'
-                },
-                json: true,
-                body: body
-              };
+              // 測定値を配列に追加
+              measurementArrays[sensorTag.id].push(measurement);
 
-              console.log(JSON.stringify(options));
+              // カウンタをアップ
+              measurementTimes[sensorTag.id]++;
 
-              // API叩く
-              request.post(options, function(error, response, body){
-                if (!error && response.statusCode == 201) {
-                  console.log(body);
+              // カウンタが規定値を超えていたらPOSTするやつを呼び出し
+              postData: // label
+              if(measurementTimes[sensorTag.id] >= repetationNumber) {
+
+                // POSTのbody
+                var body = {};
+
+                // Measurementが単数か複数かでHTTP Headerの値を変える必要があるため、変数としてセット
+                var contentType = "";
+                var accept = "";
+
+                // 処理が詰まると嫌なので最初にカウンタリセット
+                measurementTimes[sensorTag.id] = 0;
+
+                console.log("measurementArrays["+sensorTag.id+"]=>");
+                console.log(measurementArrays[sensorTag.id]);
+
+                // measurementsArrayに入っている要素が1つならbodyそのまま、2つ以上なら"measurements":[]の形にしてあげる処理がいる
+                if(measurementArrays[sensorTag.id].length > 1){
+                  contentType = MULTIPLEHEADER;
+                  accept = MULTIPLEHEADER;
+                  body = {"measurements" : measurementArrays[sensorTag.id]};
+                } else if (measurementArrays[sensorTag.id].length === 1) {
+                  contentType = SINGLEHEADER;
+                  accept = SINGLEHEADER;
+                  body = measurementArrays[sensorTag.id][0];
                 } else {
-                  console.log('error: '+ response.statusCode);
+                  console.error('[ERR] No measurement data for ' + sensorTag.id);
+                  measurementArrays[sensorTag.id] = [];
+                  break postData; // POSTを止める.Alarmあげてもいいかもね
                 }
-              });
+
+                // for debug
+                console.log("body["+sensorTag.id+"]=>");
+                console.log(JSON.stringify(body));
+
+                // API送信用データ
+                var options = {
+                  uri: baseURI + measurementURI,
+                  headers: {
+                    'Authorization': 'Basic ' + Base64.encode(deviceUserFixedStr + systemID + ":" + devicePW),
+                    'Content-Type': contentType,
+                    'Accept': accept
+                  },
+                  body: JSON.stringify(body)
+                };
+
+                // API叩く
+                request.post(options, function(error, response, body){
+                  if (!error && response.statusCode == 201) {
+                    console.log("POST response body=>");
+                    console.log(body);
+                  } else {
+                    JSON.parse(response);
+                    console.error('error: '+ response.statusCode);
+                    console.error(response.body);
+                  }
+                });
+
+                // POSTしたのでmeasurementデータをクリア
+                measurementArrays[sensorTag.id] = [];
+
+              } // if(measurementTimes > repetationNumber) 
+
 
             }); // async.series
-          }, pollingInterval); // setInterval
+
+            setTimeout(dataCollectLoop, pollingInterval);
+
+          } // function dataCollectLoop()
+
+          deviceTimers[sensorTag.id] = setTimeout(dataCollectLoop, pollingInterval);
 
         }); // async.waterfall.end
+
+
 
       // NOTE: In case of listening for notification
       sensorTag.on('simpleKeyChange', function(left, right) {
@@ -460,8 +529,8 @@ var onDiscover = function(sensorTag) {
           console.log(JSON.stringify(data));
           console.log(addFigure(sensorTag.id) + ' を切断します。');
           sensorTag.disconnect();
-          clearInterval(device_timers[sensorTag.id]);
-          delete(device_timers[sensorTag.id]);
+          clearTimeout(deviceTimers[sensorTag.id]);
+          delete(deviceTimers[sensorTag.id]);
 
           // deleteフラグがtrueならc8y上のデバイス情報を削除
           if (deleteFlg) {
