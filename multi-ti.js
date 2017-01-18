@@ -67,7 +67,8 @@ function makeBody(results, deviceName, deviceID){
   body.gyroscope = results[5];
   body.luxometer = results[6];
   body.battery = results[7];
-  
+  body.gps = results[8];
+
   return body;
 }
 
@@ -264,7 +265,7 @@ var onDiscover = function(sensorTag) {
 
           async.series([
 
-            function(callback) {
+            function readIrTemperature(callback) {
               console.log('readIrTemperature');
               sensorTag.readIrTemperature(function(error, objectTemperature, ambientTemperature) {
                 console.log('object temperature = %d °C', objectTemperature.toFixed(1));
@@ -286,7 +287,7 @@ var onDiscover = function(sensorTag) {
                 callback(null, obj);
               });
             },
-            function(callback) {
+            function readAccelerometer(callback) {
               console.log('readAccelerometer');
               sensorTag.readAccelerometer(function(error, x, y, z) {
                 console.log('x = %d G', x.toFixed(1));
@@ -312,7 +313,7 @@ var onDiscover = function(sensorTag) {
                 callback(null, obj);
               });
             },
-            function(callback) {
+            function readHumidity(callback) {
               console.log('readHumidity');
               sensorTag.readHumidity(function(error, temperature, humidity) {
                 console.log('temperature = %d °C', temperature.toFixed(1));
@@ -333,7 +334,7 @@ var onDiscover = function(sensorTag) {
                 callback(null, obj);
               });
             },
-            function(callback) {
+            function readMagnetometer(callback) {
               console.log('readMagnetometer');
               sensorTag.readMagnetometer(function(error, x, y, z) {
                 console.log('x = %d μT', x.toFixed(1));
@@ -359,7 +360,7 @@ var onDiscover = function(sensorTag) {
                 callback(null, obj);
               });
             },
-            function(callback) {
+            function readBarometricPressure(callback) {
               console.log('readBarometricPressure');
               sensorTag.readBarometricPressure(function(error, pressure) {
                 console.log('pressure = %d mBar', pressure.toFixed(1));
@@ -375,7 +376,7 @@ var onDiscover = function(sensorTag) {
                 callback(null, obj);
               });
             },
-            function(callback) {
+            function readGyroscope(callback) {
               console.log('readGyroscope');
               sensorTag.readGyroscope(function(error, x, y, z) {
                 console.log('x = %d °/s', x.toFixed(1));
@@ -401,7 +402,7 @@ var onDiscover = function(sensorTag) {
                 callback(null, obj);
               });
             },
-            function(callback) {
+            function readLuxometer(callback) {
               console.log('readLuxometer');
               sensorTag.readLuxometer(function(error, lux) {
                 console.log('lux = %d', lux.toFixed(1));
@@ -432,6 +433,35 @@ var onDiscover = function(sensorTag) {
 
                 callback(null, obj);
               });
+            },
+            function readGPS(callback) {
+              console.log('readGPS');
+
+              const exec = require('child_process').exec;
+              exec('python shell_gps_data.py', (err, stdout, stderr) => {
+                if (err) { console.log(err); }
+
+                  gps = JSON.parse(stdout);
+
+                  console.log('GPS : ' + gps);
+
+                  var obj = Object();
+                  var objLat = Object();
+                  var objLon = Object();
+
+                  objLat['value'] = gps.lat;
+                  objLat['unit'] = "°";
+
+                  objLon['value'] = gps.lon;
+                  objLon['unit'] = "°";
+
+                  obj['latitude'] = objLat;
+                  obj['longitude'] = objLon;
+
+                  callback(null, obj);
+
+              });
+
             }
             ],
             function results(err, results) {
