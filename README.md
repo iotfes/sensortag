@@ -96,6 +96,62 @@ NobleDevice.Util.mixin(CC2650SensorTag, NobleDevice.BatteryService); // <-追加
 var pollingInterval = 10000; //ms | NOTE: Interval for polling in periodic
 ```
 
+### サービス自動起動設定
+
+Raspberry PIの電源ON時に自動的にmulti-ti.jsを動かすためのTIPS。  
+[参考：Raspbian jessieでSystemdを使った自動起動](http://qiita.com/yosi-q/items/55d6d3d6834c778ae2ea)
+
+1.serviceファイルの作成
+
+下記のような「sensortag.service」ファイルを/etc/systemd/system配下におきます。  
+（以下、sensortagディレクトリが/home/pi直下にある場合。ディレクトリが変わる場合はExecStartの項を適宜編集。）
+
+`$ sudo vim /etc/systemd/system/sensortag.service`
+
+```
+[Unit]
+Description=sensortag service
+After=syslog.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/node /home/pi/sensortag/multi-ti.js
+Restart=always
+RestartSec=10                       # Restart service after 10 seconds if node service crash$
+StandardOutput=syslog               # Output to syslog
+StandardError=syslog                # Output to syslog
+SyslogIdentifier=nodejs-ti
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+2.登録確認
+
+以下のコマンドを打って、同じ結果が返ってきていれば成功
+
+```
+$ sudo systemctl list-unit-files --type=service |grep sensortag
+sensortag.service                      disabled
+```
+
+```
+$ sudo systemctl start sensortag
+（何も表示されない）
+$ ps aux |grep node
+root      1353 63.0  3.1  92368 30308 ?        Ssl  12:10   0:02 /usr/local/bin/node /home/pi/sensortag/multi-ti.js
+$ sudo systemctl stop sensortag
+（何も表示されない）
+```
+
+3.自動起動設定
+
+```
+$ sudo systemctl enable sensortag
+Created symlink from /etc/systemd/system/multi-user.target.wants/sensortag.service to /etc/systemd/system/sensortag.service.
+```
+
 ## Author
 
 Akiyuki YOSHINO
