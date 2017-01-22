@@ -10,3 +10,6 @@ exports.delete = true;
 exports.pollingInterval = 10000;
 // 何回データを収集したらPOSTするか（単位は回）
 exports.repetationNumber = 1;
+
+exports.gpsgeturl = 'https://gpsmap.herokuapp.com/gps/get/'; // GPS問い合わせ用URL
+exports.accuracy = 0.01; // 浮動小数点で指定（整数だとエラー）
