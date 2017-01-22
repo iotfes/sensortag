@@ -23,6 +23,9 @@ var deleteFlg = config.delete;
 var pollingInterval = config.pollingInterval || 10000; // ms | Interval for polling in periodic
 var repetationNumber = config.repetationNumber || 1; // a number for deciding how many measurement data to be sent together
 
+var GPSGETURI = 'https://gpsmap.herokuapp.com/gps/get/'
+var accuracy = config.accuracy || 1.01
+
 var baseURI = 'http://'+tenant+'.cumulocity.com';
 var inventoryURI = '/inventory/managedObjects';
 var measurementURI = '/measurement/measurements';
@@ -439,26 +442,33 @@ var onDiscover = function(sensorTag) {
 
               const exec = require('child_process').exec;
               exec('python shell_gps_data.py', (err, stdout, stderr) => {
-                if (err) { console.log(err); }
 
+                gps = Object();
+
+                if (err) {
+                  console.log("error: "+err);
+                  gps.lat = 0;
+                  gps.lon = 0;
+                } else {
                   gps = JSON.parse(stdout);
+                }
 
-                  console.log('GPS : ' + gps);
+                console.log('GPS : ' + JSON.stringify(gps));
 
-                  var obj = Object();
-                  var objLat = Object();
-                  var objLon = Object();
+                var obj = Object();
+                var objLat = Object();
+                var objLon = Object();
 
-                  objLat['value'] = gps.lat;
-                  objLat['unit'] = "°";
+                objLat['value'] = gps.lat;
+                objLat['unit'] = "°";
 
-                  objLon['value'] = gps.lon;
-                  objLon['unit'] = "°";
+                objLon['value'] = gps.lon;
+                objLon['unit'] = "°";
 
-                  obj['latitude'] = objLat;
-                  obj['longitude'] = objLon;
+                obj['latitude'] = objLat;
+                obj['longitude'] = objLon;
 
-                  callback(null, obj);
+                callback(null, obj);
 
               });
 
@@ -683,5 +693,73 @@ var onDiscover = function(sensorTag) {
     });
 };
 
+var gpsCheck = function gpsCheckLoop() {
+
+console.log('gpsCheckLoop');
+
+  async.series([
+
+    function readGPS(callback) {
+
+      const exec = require('child_process').exec;
+      exec('python shell_gps_data.py', (err, stdout, stderr) => {
+        gps = Object();
+
+        if (err) {
+          console.log("error: "+ err);
+          gps.lat = 0;
+          gps.lon = 0;
+        } else {
+          gps = JSON.parse(stdout);
+        }
+
+        console.log('GPS : ' + JSON.stringify(gps));
+
+        var obj = Object();
+
+        obj['latitude'] = gps.lat;
+        obj['longitude'] = gps.lon;
+
+        callback(null, obj);
+
+      });
+
+    }
+    ],
+    function results(err, results) {
+      console.log('results: ' + JSON.stringify(results));
+
+      // API送信用データ
+      var options = {
+        uri: GPSGETURI+results[0]['latitude']+'/'+results[0]['longitude']+'/'+accuracy,
+        json: true
+      };
+
+      // API叩く
+      request.get(options, function(error, response, body){
+        if (!error && response.statusCode == 200) {
+          console.log("GET response body=>");
+          console.log(body);
+
+          if (body.length > 0){
+            console.log("There are some Gakkon points!");
+          }
+
+        } else {
+          console.error('error: '+ response.statusCode);
+          console.error(response.body);
+        }
+      });// request.get
+
+    }); // async.series
+
+    setTimeout(gpsCheckLoop, 10000);
+
+};
+
 console.info('start');
+
+gpsCheck();
+
 SensorTag.discover(onDiscover);
+

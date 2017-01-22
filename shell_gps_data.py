@@ -178,7 +178,7 @@ if __name__ == "__main__":
 			f.write(s)	#Save to file
 		#time.sleep(2)
 	except IndexError:
-		print ("Unable to read")
+		print ('{"lat":0,"lon":0}')
 	except KeyboardInterrupt:
 		if enable_save_to_file:
 			f.close()
