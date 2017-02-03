@@ -24,7 +24,7 @@ var pollingInterval = config.pollingInterval || 10000; // ms | Interval for poll
 var repetationNumber = config.repetationNumber || 1; // a number for deciding how many measurement data to be sent together
 
 var GPSGETURI = config.gpsgeturl || 'https://gpsmap.herokuapp.com/gps/get/'
-var accuracy = config.accuracy || 0.01
+var accuracy = config.accuracy || 0.0005
 
 var baseURI = 'http://'+tenant+'.cumulocity.com';
 var inventoryURI = '/inventory/managedObjects';
