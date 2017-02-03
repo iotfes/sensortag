@@ -23,7 +23,7 @@ var deleteFlg = config.delete;
 var pollingInterval = config.pollingInterval || 10000; // ms | Interval for polling in periodic
 var repetationNumber = config.repetationNumber || 1; // a number for deciding how many measurement data to be sent together
 
-var shellPath = config.shellPath = "";
+var shellPath = config.shellPath || "";
 
 var GPSGETURI = config.gpsgeturl || 'https://gpsmap.herokuapp.com/gps/get/'
 var accuracy = config.accuracy || 0.0005
