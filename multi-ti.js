@@ -739,8 +739,10 @@ console.log('gpsCheckLoop');
 
           if (body.length > 0){
             console.log("There are some Gakkon points!");
+            const exec = require('child_process').exec;
             exec('python ' + shellPath + 'shell_grove_led.py 1', (err, stdout, stderr) => {});
           } else {
+            const exec = require('child_process').exec;
             exec('python ' + shellPath + 'shell_grove_led.py 0', (err, stdout, stderr) => {});
           }
 
