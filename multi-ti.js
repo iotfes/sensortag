@@ -442,18 +442,12 @@ var onDiscover = function(sensorTag) {
 
               const exec = require('child_process').exec;
               exec('python shell_gps_data.py', (err, stdout, stderr) => {
+                if (err) { console.log("error: "+err); }
 
-                gps = Object();
-
-                if (err) {
-                  console.log("error: "+err);
-                  gps.lat = 0;
-                  gps.lon = 0;
-                } else {
-                  gps = JSON.parse(stdout);
-                }
-
-                console.log('GPS : ' + JSON.stringify(gps));
+                gps = JSON.parse(stdout);
+                
+                console.log('lat : ' + gps.lat);
+                console.log('lon : ' + gps.log);
 
                 var obj = Object();
                 var objLat = Object();

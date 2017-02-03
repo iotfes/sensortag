@@ -69,7 +69,7 @@ def cleanstr(in_str):
 def safefloat(in_str):
 	try:
 		out_str = float(in_str)
-	except ValueError:
+	except:
 		out_str = -1.0
 	return out_str
 
@@ -146,9 +146,9 @@ class GPS:
 
 if __name__ == "__main__":
 	g=GPS()
-	if enable_save_to_file:
-		f=open("gps_data.csv",'w')	#Open file to log the data
-		f.write("name,latitude,longitude\n")	#Write the header to the top of the file
+	#if enable_save_to_file:
+		#f=open("gps_data.csv",'w')	#Open file to log the data
+		#f.write("name,latitude,longitude\n")	#Write the header to the top of the file
 	ind=0
 
 	try:
@@ -170,12 +170,12 @@ if __name__ == "__main__":
 		try:
 			print('{"lat":%f,"lon":%f}') %(lat,longitude)
 		except:
-			print("Time\t\t: %s\nFix status\t: %s\nSats in view\t: %s\nAltitude\t: %s\nLat\t\t: %s\nLong\t\t: %s") %(t,str(fix),str(sats),str(alt),str(lat),str(longitude))
+			print ('{"lat":0,"lon":0}')
 				
 		s=str(t)+","+str(safefloat(lat)/100)+","+str(safefloat(longitude)/100)+"\n"	
 				
-		if enable_save_to_file:
-			f.write(s)	#Save to file
+		#if enable_save_to_file:
+			#f.write(s)	#Save to file
 		#time.sleep(2)
 	except IndexError:
 		print ('{"lat":0,"lon":0}')
@@ -184,3 +184,5 @@ if __name__ == "__main__":
 			f.close()
 		print ("Exiting")
 		sys.exit(0)
+	except:
+		print ('{"lat":0,"lon":0}')
