@@ -23,6 +23,8 @@ var deleteFlg = config.delete;
 var pollingInterval = config.pollingInterval || 10000; // ms | Interval for polling in periodic
 var repetationNumber = config.repetationNumber || 1; // a number for deciding how many measurement data to be sent together
 
+var shellPath = config.shellPath = "";
+
 var GPSGETURI = config.gpsgeturl || 'https://gpsmap.herokuapp.com/gps/get/'
 var accuracy = config.accuracy || 0.0005
 
@@ -441,7 +443,7 @@ var onDiscover = function(sensorTag) {
               console.log('readGPS');
 
               const exec = require('child_process').exec;
-              exec('python shell_gps_data.py', (err, stdout, stderr) => {
+              exec('python #{shellPath}shell_gps_data.py', (err, stdout, stderr) => {
                 if (err) { console.log("error: "+err); }
 
                 gps = JSON.parse(stdout);
@@ -696,7 +698,7 @@ console.log('gpsCheckLoop');
     function readGPS(callback) {
 
       const exec = require('child_process').exec;
-      exec('python shell_gps_data.py', (err, stdout, stderr) => {
+      exec('python #{shellPath}shell_gps_data.py', (err, stdout, stderr) => {
         gps = Object();
 
         if (err) {
@@ -737,6 +739,9 @@ console.log('gpsCheckLoop');
 
           if (body.length > 0){
             console.log("There are some Gakkon points!");
+            led = `python #{shellPath}shell_grove_led.py 1`
+          } else {
+            led = `python #{shellPath}shell_grove_led.py 0`
           }
 
         } else {

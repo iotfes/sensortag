@@ -13,3 +13,4 @@ exports.repetationNumber = 1;
 
 exports.gpsgeturl = 'https://gpsmap.herokuapp.com/gps/get/'; // GPS問い合わせ用URL
 exports.accuracy = 0.0005; // 浮動小数点で指定（整数だとエラー）、0.0005 = 5m
+exports.shellPath = '/home/pi/sensortag/'; // shell_XXX.pyが置いてあるディレクトリのパス、末尾に / を記載する必要あり
