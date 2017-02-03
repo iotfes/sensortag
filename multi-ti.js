@@ -739,11 +739,9 @@ console.log('gpsCheckLoop');
 
           if (body.length > 0){
             console.log("There are some Gakkon points!");
-            const exec = require('child_process').exec;
-            exec('python ' + shellPath + 'shell_grove_led.py 1', (err, stdout, stderr) => {});
+            ledControl(1);
           } else {
-            const exec = require('child_process').exec;
-            exec('python ' + shellPath + 'shell_grove_led.py 0', (err, stdout, stderr) => {});
+            ledControl(0);
           }
 
         } else {
@@ -756,6 +754,11 @@ console.log('gpsCheckLoop');
 
     setTimeout(gpsCheckLoop, 10000);
 
+};
+
+var ledControl = function ledControlFunc(ledstatus){
+  const exec = require('child_process').exec;
+  exec('python ' + shellPath + 'shell_grove_led.py ' + ledstatus, (err, stdout, stderr) => {});
 };
 
 console.info('start');
