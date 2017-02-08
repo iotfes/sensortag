@@ -12,6 +12,7 @@ var fs = require('fs');
 var EOL = require('os').EOL;
 
 var config = require('./config.js');
+var wioNode = require('./wioNode.js');
 
 var userID = config.id;
 var userPW = config.password;
@@ -22,6 +23,7 @@ var deleteFlg = config.delete;
 
 var pollingInterval = config.pollingInterval || 10000; // ms | Interval for polling in periodic
 var repetationNumber = config.repetationNumber || 1; // a number for deciding how many measurement data to be sent together
+var gpsCheckInterval = config.gpsCheckInterval || 5000; // ms | Interval for Gakkon Point Confirmation
 
 var shellPath = config.shellPath || "";
 
@@ -739,9 +741,8 @@ console.log('gpsCheckLoop');
 
           if (body.length > 0){
             console.log("There are some Gakkon points!");
-            ledControl(1);
-          } else {
-            ledControl(0);
+            wioNode.postWioAPI(wioNode.LED);
+            wioNode.postWioAPI(wioNode.SPEAKER);
           }
 
         } else {
@@ -752,13 +753,8 @@ console.log('gpsCheckLoop');
 
     }); // async.series
 
-    setTimeout(gpsCheckLoop, 10000);
+    setTimeout(gpsCheckLoop, gpsCheckInterval);
 
-};
-
-var ledControl = function ledControlFunc(ledstatus){
-  const exec = require('child_process').exec;
-  exec('python ' + shellPath + 'shell_grove_led.py ' + ledstatus, (err, stdout, stderr) => {});
 };
 
 console.info('start');
